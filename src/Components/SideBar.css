@@ -1,0 +1,42 @@
+.sideBar {
+  background-color: #fff;
+  border: 1px solid transparent;
+  padding: 0.3rem 0rem 0rem 0rem;
+}
+
+.nav-link{
+  text-decoration: none;
+}
+
+.nav-link:hover{
+  background-color: rgba(128, 128, 128, 0.151);  
+}
+
+.logoImg{
+  width: 3rem;
+}
+
+.logoText{
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.item{
+  color: rgba(0, 0, 0, 0.667);
+}
+
+.activebtn{
+  background-color: rgba(0, 0, 255, 0.664);
+  font-Size: 1.1rem;  
+  padding: 0.6rem 0rem;   
+  border-radius: 0.5rem;  
+  color: #fff;
+}
+
+.notactivebtn{
+  background-color: #fff;
+  font-Size: 1.1rem;  
+  padding: 0.6rem 0rem;   
+  border-radius: 0.5rem;  
+  color: rgba(0, 0, 0, 0.703);
+}

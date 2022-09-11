@@ -1,0 +1,18 @@
+.log{
+    padding: 15px 20px; 
+    border: 1px solid rgba(128, 128, 128, 0.623);
+    border-radius: 12px; 
+    background-color: rgba(167, 169, 181, 0.244);   
+   } 
+   
+   .W1{
+    font-size: 18px;
+    
+   }
+   
+   .W2{
+    font-size: 22px;
+    color: gray;
+    font-weight: bold;
+   }
+   
