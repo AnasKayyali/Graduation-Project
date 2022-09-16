@@ -1,358 +1,196 @@
-  import { Form, InputNumber, Popconfirm, Table, Typography, Button, Modal } from 'antd';
-  import React, { useState } from 'react';
-  import { useSelector, useDispatch } from 'react-redux';
-  import { Expand, notExpand } from '../store/sideBar.jsx';
-  import { Col, Input } from 'reactstrap';
+import { Table, Button, Modal } from 'antd';
+import React, { useState, useEffect } from 'react';
+import qs from 'qs';
+import { useSelector, useDispatch } from 'react-redux';
+import { Expand, notExpand } from '../store/sideBar.jsx';
+import { Col, Input } from 'reactstrap';
+import { BellTwoTone } from '@ant-design/icons';
+import  { BsGlobe }  from 'react-icons/bs';
+import { MenuOutlined } from '@ant-design/icons';
+import Logo2 from '../images/d5ee0e9c87bb54cf867d7fb89c4570b8-online-education-logo.png';
 
-  const originData = [];
-  
-    originData.push({
-      key: 1,
-      name: 'Edrward',
-      age: 32,
-      address: 'London Park no.',
-    },
-    {
-      key: 2,
-      name: 'Edrward',
-      age: 33,
-      address: 'London Park no.',
-    },
-    {
-      key: 3,
-      name: 'Edrward',
-      age: 34,
-      address: 'London Park no.',
-    },
-    {
-      key: 4,
-      name: 'Edrward',
-      age: 34,
-      address: 'London Park no.',
-    },
-    {
-      key: 5,
-      name: 'Edrward',
-      age: 34,
-      address: 'London Park no.',
-    },
-    {
-      key: 6,
-      name: 'Edrward',
-      age: 34,
-      address: 'London Park no.',
-    },
-    {
-      key: 7,
-      name: 'Edrward',
-      age: 34,
-      address: 'London Park no.',
-    },
-    {
-      key: 8,
-      name: 'Edrward',
-      age: 34,
-      address: 'London Park no.',
-    },
-    {
-      key: 9,
-      name: 'Edrward',
-      age: 34,
-      address: 'London Park no.',
-    },
-    {
-      key: 10,
-      name: 'Edrward',
-      age: 34,
-      address: 'London Park no.',
-    },
-    {
-      key: 11,
-      name: 'Edrward',
-      age: 34,
-      address: 'London Park no.',
-    },
-    {
-      key: 12,
-      name: 'Edrward',
-      age: 34,
-      address: 'London Park no.',
-    },);
-  
-  
-  const EditableCell = ({
-    editing,
-    dataIndex,
-    title,
-    inputType,
-    record,
-    index,
-    children,
-    ...restProps
-  }) => {
-    const inputNode = inputType === 'number' ? <InputNumber /> : <Input />;
-    return (
-      <td {...restProps}>
-        {editing ? (
-          <Form.Item
-            name={dataIndex}
-            style={{
-              margin: 0,
-            }}
-            rules={[
-              {
-                required: true,
-                message: `Please Input ${title}!`,
-              },
-            ]}
-          >
-            {inputNode}
-          </Form.Item>
-        ) : (
-          children
-        )}
-      </td>
-    );
-  };
-  
-  const UserList = () => {
-    const [form] = Form.useForm();
-    const [data, setData] = useState(originData);
-    const [editingKey, setEditingKey] = useState('');
-  
-    const isEditing = (record) => record.key === editingKey;
-  
-    const edit = (record) => {
-      form.setFieldsValue({
-        name: '',
-        age: '',
-        address: '',
-        ...record,
-      });
-      setEditingKey(record.key);
-    };
-  
-    const cancel = () => {
-      setEditingKey('');
-    };
-  
-    const save = async (key) => {
-      try {
-        const row = await form.validateFields();
-        const newData = [...data];
-        const index = newData.findIndex((item) => key === item.key);
-  
-        if (index > -1) {
-          const item = newData[index];
-          newData.splice(index, 1, { ...item, ...row });
-          setData(newData);
-          setEditingKey('');
-        } else {
-          newData.push(row);
-          setData(newData);
-          setEditingKey('');
-        }
-      } catch (errInfo) {
-        console.log('Validate Failed:', errInfo);
-      }
-    };
+const getRandomuserParams = (params) => ({
+  results: params.pagination?.pageSize,
+  page: params.pagination?.current,
+  ...params,
+});
 
-    const handleDelete = (key) => {
-      const newData = data.filter((item) => item.key !== key);
-      setData(newData);
-    };
+const UserList = () => {
+  const [data, setData] = useState();
+  const [loading, setLoading] = useState(false);
+  const [tableParams, setTableParams] = useState({
+    pagination: {
+      current: 1,
+      pageSize: 10,
+    },
+  });
 
-    const columns = [
-      {
-        title: 'name',
-        dataIndex: 'name',
-        width: '15%',
-        editable: true,
-      },
-      {
-        title: 'age',
-        dataIndex: 'age',
-        width: '15%',
-        editable: true,
-        sorter: (a, b) => a.age - b.age,
-      },
-      {
-        title: 'address',
-        dataIndex: 'address',
-        width: '20%',
-        editable: true,
-      },
-      {
-        title: 'operation',
-        dataIndex: 'operation',
-        width: '1%',
-        render: (_, record) => {
-          const editable = isEditing(record);
-          return editable ? (
-            <span>
-              <Typography.Link
-                onClick={() => save(record.key)}
-                style={{
-                  marginRight: 8,
-                }}
-              >
-                Save
-              </Typography.Link>
-              <Typography.Link>
-              <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-                Cancel
-              </Popconfirm>
-              </Typography.Link>
-            </span>
-          ) : (
-            <>
-              <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
-                Edit
-              </Typography.Link>
-              <Typography.Link
-              style={{marginLeft: 20}} >
-                <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.key)}>
-                  Delete
-                </Popconfirm>
-              </Typography.Link>
-            </>
-            
-          );
+  
+const fetchData = () => {
+  setLoading(true);
+  fetch(`https://wl-users-service.herokuapp.com/api/v1/users?${qs.stringify(getRandomuserParams(tableParams))}`)
+    .then((res) => res.json())
+    .then(( results ) => {
+      console.log(results);
+      setData(results.data.original.data);
+      setLoading(false);
+      setTableParams({
+        ...tableParams,
+        pagination: {
+          ...tableParams.pagination,
+          total: 200, // 200 is mock data, you should read it from server
+          // total: data.totalCount,
         },
+      });
+    });
+};
+
+useEffect(() => {
+  fetchData();
+}, [JSON.stringify(tableParams)]);
+
+const handleTableChange = (pagination, filters, sorter) => {
+  setTableParams({
+    pagination,
+    filters,
+    ...sorter,
+  });
+};
+
+  const columns = [
+    {
+    title: 'ID',
+    dataIndex: 'id',
+    sorter: true,
+    width: '20%',
+    },
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      sorter: true,
+      width: '20%',
       },
-    ];
+      {
+        title: 'Profile Picture',
+        dataIndex: 'profile_picture',
+        render: () => <img src={Logo2} alt="" width="50"/>,
+        sorter: true,
+        width: '20%',
+        },
+    {
+    title: 'Email',
+    dataIndex: 'email',
+    },
+  ];
 
 
-        const [open, setOpen] = useState(false);
-        const [confirmLoading, setConfirmLoading] = useState(false);
-        const [name, setName] = useState("");
-        const [age, setAge] = useState("");
-        const [address, setAddress] = useState("");
-        
-        const showModal = () => {
-          setOpen(true);
-        };
+      const [open, setOpen] = useState(false);
+      const [confirmLoading, setConfirmLoading] = useState(false);
+      const [name, setName] = useState("");
+      const [gender, setGender] = useState("");
+      const [email, setEmail] = useState("");
       
-        const handleOk = () => {
-          const newData = {
-            key: 1,
-            name: name,
-            age: age,
-            address: address,
-          };
+      const showModal = () => {
+        setOpen(true);
+      };
+    
+      const handleOk = () => {
+        const newData = {
+          name: name,
+          gender: gender,
+          email: email,
+        };
+        const sendInfo = async () => {
+          const axios = require('axios')
+          await axios.post(
+          'https://wl-users-service.herokuapp.com/api/v1/users', 
+          {name:name , gender:gender , email: email}
+          )
+          .then(function (response) {localStorage['token']=response.data.data.token; console.log(response.data.data.token)})
+          .catch(function (error) {console.log(error)})
           setData([...data, newData]);
           setName("");
-          setAge("");
-          setAddress("");
+          setGender("");
+          setEmail("");
           setConfirmLoading(true);
           setTimeout(() => {
             setOpen(false);
             setConfirmLoading(false);
           }, 2000);
-        };
-      
-        const handleCancel = () => {
-          console.log('Clicked cancel button');
-          setOpen(false);
-        };
-
-    const mergedColumns = columns.map((col) => {
-      if (!col.editable) {
-        return col;
-      }
-  
-      return {
-        ...col,
-        onCell: (record) => ({
-          record,
-          inputType: col.dataIndex === 'age' ? 'number' : 'text',
-          dataIndex: col.dataIndex,
-          title: col.title,
-          editing: isEditing(record),
-        }),
+        }
       };
-    });
+    
+      const handleCancel = () => {
+        console.log('Clicked cancel button');
+        setOpen(false);
+      };
 
-    const globalState = useSelector((state) => state);
-    const dispatch = useDispatch();
-    const hideBar = globalState.sideBar.isExpand;
+  const globalState = useSelector((state) => state);
+  const dispatch = useDispatch();
+  const hideBar = globalState.sideBar.isExpand;
 
-    const sideBarHandler = (status) => {
-      if (status) {
-        dispatch(notExpand());
-      } else {
-        dispatch(Expand());
-      }
-    };
-
-    return (
-      <Col lg-auto className='bg-black pt-3 bg-opacity-10'>
-        <div>
-          <Button type="primary" className="mb-5" onClick={() => sideBarHandler(hideBar)}>
-            {hideBar ? 'not Expand' : 'Expand'}
-          </Button>
-        </div>
-        <Button type="primary" onClick={showModal} className="mb-1" size={'large'}>
-          Add User
-        </Button>
-        <Modal
-        title="Add User"
-        open={open}
-        onOk={handleOk}
-        confirmLoading={confirmLoading}
-        onCancel={handleCancel}
-        >
-        <Input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        id="examplName"
-        name="name"
-        placeholder="name"
-        type="text"
-        size='md'
-        required
-        className='mb-4'
-        />
-        <Input
-        value={age}
-        onChange={(e) => setAge(e.target.value)}
-        id="exampleAge"
-        name="age"
-        placeholder="age"
-        type="text"
-        size='md'
-        required
-        className='mb-4'
-        />
-        <Input
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-        id="exampleAddress"
-        name="address"
-        placeholder="address"
-        type="address"
-        size='md'
-        required
-        />
-        </Modal>
-        <Form form={form} component={false}>
-          <Table
-          components={{
-            body: {
-              cell: EditableCell,
-            },
-          }}
-          bordered
-          dataSource={data}
-          columns={mergedColumns}
-          rowClassName="editable-row"
-          pagination={{
-            pageSize: 10,
-          }}
-          />
-        </Form>
-      </Col>
-    );
+  const sideBarHandler = (status) => {
+    if (status) {
+      dispatch(notExpand());
+    } else {
+      dispatch(Expand());
+    }
   };
-  
-  export default UserList;
+
+  return (
+    <Col lg-auto className='pt-3'>
+      <div className='d-flex align-items-center justify-content-between mb-5'>
+        <MenuOutlined className='d-flex align-items-center' style={{fontSize:30,color:'gray'}} onClick={() => {sideBarHandler(hideBar)}}  />
+        <div style={{fontSize:30,marginTop:-5}} className='d-flex align-items-center justify-content-between gap-3'>
+          <BellTwoTone style={{fontSize:28}}/>
+          <BsGlobe style={{color:'gray',fontSize:25}} />
+          <img src={ Logo2 } alt="Logo" width='42'/>
+        </div>
+      </div>
+      <Button type="primary" onClick={showModal} className="mb-1" size={'large'}>
+        Add User
+      </Button>
+      <Modal
+      title="Add User"
+      open={open}
+      onOk={handleOk}
+      confirmLoading={confirmLoading}
+      onCancel={handleCancel}
+      >
+      <Input
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      id="examplName"
+      name="name"
+      placeholder="name"
+      type="text"
+      size='md'
+      required
+      className='mb-4'
+      />
+    
+      <Input
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      id="exampleEmail"
+      name="email"
+      placeholder="email"
+      type="email"
+      size='md'
+      required
+      />
+      </Modal>
+      <Table
+        bordered
+        dataSource={data}
+        columns={columns}
+        rowKey={(record) => record.id}
+        pagination={tableParams.pagination}
+        loading={loading}
+        onChange={handleTableChange}
+      />
+    </Col>
+  );
+};
+
+export default UserList;

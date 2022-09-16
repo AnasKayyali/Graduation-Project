@@ -15,7 +15,7 @@ const Sidebar = () => {
     navigate('/login');
   } 
   return (
-    <Col lg={2}>
+    <Col lg={2} >
       <div className='sideBar'>
         <div className='d-flex align-items-center justify-content-start gap-2 mb-4 px-2'>
           <img src={LOGO} alt="logo-img" className='logoImg' />

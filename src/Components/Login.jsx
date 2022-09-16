@@ -20,7 +20,7 @@ export default function Login() {
       const axios = require('axios')
       setShowLoader(true)
       await axios.post(
-      'https://i-wanna-learn.herokuapp.com/api/v1/users/login', 
+      'https://wl-users-service.herokuapp.com/api/v1/users/login', 
       {email: email, password: password}
       )
       .then(function (response) {localStorage['token']=response.data.data.token; console.log(response.data.data.token)})

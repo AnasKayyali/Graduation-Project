@@ -1,84 +1,19 @@
 import { Form, InputNumber, Popconfirm, Table, Typography, Button, Modal } from 'antd';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import qs from 'qs';
 import { useSelector, useDispatch } from 'react-redux';
 import { Expand, notExpand } from '../store/sideBar.jsx';
 import { Col, Input } from 'reactstrap';
+import { BellTwoTone } from '@ant-design/icons';
+import  { BsGlobe }  from 'react-icons/bs';
+import { MenuOutlined } from '@ant-design/icons';
+import Logo2 from '../images/d5ee0e9c87bb54cf867d7fb89c4570b8-online-education-logo.png';
 
-const originData = [];
-
-  originData.push({
-    key: 1,
-    name: 'Edrward',
-    age: 32,
-    address: 'London Park no.',
-  },
-  {
-    key: 2,
-    name: 'Edrward',
-    age: 33,
-    address: 'London Park no.',
-  },
-  {
-    key: 3,
-    name: 'Edrward',
-    age: 34,
-    address: 'London Park no.',
-  },
-  {
-    key: 4,
-    name: 'Edrward',
-    age: 34,
-    address: 'London Park no.',
-  },
-  {
-    key: 5,
-    name: 'Edrward',
-    age: 34,
-    address: 'London Park no.',
-  },
-  {
-    key: 6,
-    name: 'Edrward',
-    age: 34,
-    address: 'London Park no.',
-  },
-  {
-    key: 7,
-    name: 'Edrward',
-    age: 34,
-    address: 'London Park no.',
-  },
-  {
-    key: 8,
-    name: 'Edrward',
-    age: 34,
-    address: 'London Park no.',
-  },
-  {
-    key: 9,
-    name: 'Edrward',
-    age: 34,
-    address: 'London Park no.',
-  },
-  {
-    key: 10,
-    name: 'Edrward',
-    age: 34,
-    address: 'London Park no.',
-  },
-  {
-    key: 11,
-    name: 'Edrward',
-    age: 34,
-    address: 'London Park no.',
-  },
-  {
-    key: 12,
-    name: 'Edrward',
-    age: 34,
-    address: 'London Park no.',
-  },);
-
+const getRandomuserParams = (params) => ({
+  results: params.pagination?.pageSize,
+  page: params.pagination?.current,
+  ...params,
+});
 
 const EditableCell = ({
   editing,
@@ -117,8 +52,47 @@ const EditableCell = ({
 
 const MaterialList = () => {
   const [form] = Form.useForm();
-  const [data, setData] = useState(originData);
+  const [data, setData] = useState();
   const [editingKey, setEditingKey] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [tableParams, setTableParams] = useState({
+    pagination: {
+      current: 1,
+      pageSize: 10,
+    },
+  });
+
+  
+const fetchData = () => {
+  setLoading(true);
+  fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(tableParams))}`)
+    .then((res) => res.json())
+    .then(({ results }) => {
+      setData(results);
+      setLoading(false);
+      setTableParams({
+        ...tableParams,
+        pagination: {
+          ...tableParams.pagination,
+          total: 200, // 200 is mock data, you should read it from server
+          // total: data.totalCount,
+        },
+      });
+    });
+};
+
+useEffect(() => {
+  fetchData();
+}, [JSON.stringify(tableParams)]);
+
+const handleTableChange = (pagination, filters, sorter) => {
+  setTableParams({
+    pagination,
+    filters,
+    ...sorter,
+  });
+};
+
 
   const isEditing = (record) => record.key === editingKey;
 
@@ -163,25 +137,32 @@ const MaterialList = () => {
   };
 
   const columns = [
+     {
+  title: 'Name',
+  dataIndex: 'name',
+  sorter: true,
+  render: (name) => `${name.first} ${name.last}`,
+  width: '20%',
+},
+{
+  title: 'Gender',
+  dataIndex: 'gender',
+  filters: [
     {
-      title: 'name',
-      dataIndex: 'name',
-      width: '15%',
-      editable: true,
+      text: 'Male',
+      value: 'male',
     },
     {
-      title: 'age',
-      dataIndex: 'age',
-      width: '15%',
-      editable: true,
-      sorter: (a, b) => a.age - b.age,
+      text: 'Female',
+      value: 'female',
     },
-    {
-      title: 'address',
-      dataIndex: 'address',
-      width: '20%',
-      editable: true,
-    },
+  ],
+  width: '20%',
+},
+{
+  title: 'Email',
+  dataIndex: 'email',
+},
     {
       title: 'operation',
       dataIndex: 'operation',
@@ -286,14 +267,17 @@ const MaterialList = () => {
   };
 
   return (
-    <Col lg-auto className='mt-4'>
-      <div>
-        <Button type="primary" className="mb-4" onClick={() => sideBarHandler(hideBar)}>
-          {hideBar ? 'not Expand' : 'Expand'}
-        </Button>
+    <Col lg-auto className='pt-3'>
+      <div className='d-flex align-items-center justify-content-between mb-5'>
+        <MenuOutlined className='d-flex align-items-center' style={{fontSize:30,color:'gray'}} onClick={() => {sideBarHandler(hideBar)}}  />
+        <div style={{fontSize:30,marginTop:-5}} className='d-flex align-items-center justify-content-between gap-3'>
+          <BellTwoTone style={{fontSize:28}}/>
+          <BsGlobe style={{color:'gray',fontSize:25}} />
+          <img src={ Logo2 } alt="Logo" width='42'/>
+        </div>
       </div>
-      <Button type="primary" onClick={showModal} className="mb-2">
-        Add
+      <Button type="primary" onClick={showModal} className="mb-1" size={'large'}>
+        Add User
       </Button>
       <Modal
       title="Add User"
@@ -346,9 +330,10 @@ const MaterialList = () => {
         dataSource={data}
         columns={mergedColumns}
         rowClassName="editable-row"
-        pagination={{
-          pageSize: 8,
-        }}
+        rowKey={(record) => record.login.uuid}
+        pagination={tableParams.pagination}
+        loading={loading}
+        onChange={handleTableChange}
         />
       </Form>
     </Col>
