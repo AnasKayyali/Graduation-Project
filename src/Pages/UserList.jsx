@@ -1,13 +1,141 @@
-import { Table, Button, Modal } from 'antd';
-import React, { useState, useEffect } from 'react';
+import { Table, Button, Modal, InputNumber, Form, Input, Popconfirm, Typography } from 'antd';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import qs from 'qs';
 import { useSelector, useDispatch } from 'react-redux';
 import { Expand, notExpand } from '../store/sideBar.jsx';
-import { Col, Input } from 'reactstrap';
+import { Col } from 'reactstrap';
 import { BellTwoTone } from '@ant-design/icons';
 import  { BsGlobe }  from 'react-icons/bs';
 import { MenuOutlined } from '@ant-design/icons';
 import Logo2 from '../images/d5ee0e9c87bb54cf867d7fb89c4570b8-online-education-logo.png';
+
+// Edit Handler //
+
+const EditableCell2 = ({
+  editing,
+  dataIndex,
+  title,
+  inputType,
+  record,
+  index,
+  children,
+  ...restProps
+}) => {
+  const inputNode = inputType === 'number' ? <InputNumber /> : <Input />;
+  return (
+    <td {...restProps}>
+      {editing ? (
+        <Form.Item
+          name={dataIndex}
+          style={{
+            margin: 0,
+          }}
+          rules={[
+            {
+              required: true,
+              message: `Please Input ${title}!`,
+            },
+          ]}
+        >
+          {inputNode}
+        </Form.Item>
+      ) : (
+        children
+      )}
+    </td>
+  );
+};
+
+// Edit Handler //
+
+
+// Delete Handler //
+
+const EditableContext = React.createContext(null);
+
+const EditableRow = ({ index, ...props }) => {
+  const [form] = Form.useForm();
+  return (
+    <Form form={form} component={false}>
+      <EditableContext.Provider value={form}>
+        <tr {...props} />
+      </EditableContext.Provider>
+    </Form>
+  );
+};
+
+const EditableCell = ({
+  title,
+  editable,
+  children,
+  dataIndex,
+  record,
+  handleSave,
+  ...restProps
+}) => {
+  const [editing, setEditing] = useState(false);
+  const inputRef = useRef(null);
+  const form = useContext(EditableContext);
+  useEffect(() => {
+    if (editing) {
+      inputRef.current.focus();
+    }
+  }, [editing]);
+
+  const toggleEdit = () => {
+    setEditing(!editing);
+    form.setFieldsValue({
+      [dataIndex]: record[dataIndex],
+    });
+  };
+
+  const save = async () => {
+    try {
+      const values = await form.validateFields();
+      toggleEdit();
+      handleSave({ ...record, ...values });
+    } catch (errInfo) {
+      console.log('Save failed:', errInfo);
+    }
+  };
+
+  let childNode = children;
+
+  if (editable) {
+    childNode = editing ? (
+      <Form.Item
+        style={{
+          margin: 0,
+        }}
+        name={dataIndex}
+        rules={[
+          {
+            required: true,
+            message: `${title} is required.`,
+          },
+        ]}
+      >
+        <Input ref={inputRef} onPressEnter={save} onBlur={save} />
+      </Form.Item>
+    ) : (
+      <div
+        className="editable-cell-value-wrap"
+        style={{
+          paddingRight: 24,
+        }}
+        onClick={toggleEdit}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  return <td {...restProps}>{childNode}</td>;
+};
+
+//Delete Handler//
+
+
 
 const getRandomuserParams = (params) => ({
   results: params.pagination?.pageSize,
@@ -16,14 +144,102 @@ const getRandomuserParams = (params) => ({
 });
 
 const UserList = () => {
+
   const [data, setData] = useState();
   const [loading, setLoading] = useState(false);
+  const [editingKey, setEditingKey] = useState('');
   const [tableParams, setTableParams] = useState({
     pagination: {
       current: 1,
       pageSize: 10,
     },
   });
+  
+  // Edit Handler //
+   
+  
+
+  // Edit Handler //
+
+  //Delete Handler//
+
+  const handleDelete = (key) => {
+    const newData = data.filter((item) => item.key !== key);
+    setData(newData);
+  };
+
+  
+  const defaultColumns = [
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      sorter: true,
+      width: '10%',
+    },
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      sorter: true,
+      width: '10%',
+    },
+    {
+      title: 'Profile Picture',
+      dataIndex: 'profile_picture',
+      render: () => <img src={Logo2} alt="" width="50"/>,
+      width: '8%',
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+    },
+    {
+      title: 'operation',
+      dataIndex: 'operation',
+      render: (_, record) =>
+        data.length >= 1 ? (
+          <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.id)}>
+            Delete
+          </Popconfirm>
+      ) : null,
+    }
+  ];
+
+  const handleSave = (row) => {
+    const newData = [...data];
+    const index = newData.findIndex((item) => row.key === item.key);
+    const item = newData[index];
+    newData.splice(index, 1, { ...item, ...row });
+    setData(newData);
+  };
+
+  const components = {
+    body: {
+      row: EditableRow,
+      cell: EditableCell,
+    },
+  };
+  const columns = defaultColumns.map((col) => {
+    if (!col.editable) {
+      return col;
+    }
+
+    return {
+      ...col,
+      onCell: (record) => ({
+        record,
+        editable: col.editable,
+        dataIndex: col.dataIndex,
+        title: col.title,
+        handleSave,
+      }),
+    };
+  });
+
+  //Delete Handler//
 
   
 const fetchData = () => {
@@ -57,37 +273,9 @@ const handleTableChange = (pagination, filters, sorter) => {
   });
 };
 
-  const columns = [
-    {
-    title: 'ID',
-    dataIndex: 'id',
-    sorter: true,
-    width: '20%',
-    },
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      sorter: true,
-      width: '20%',
-      },
-      {
-        title: 'Profile Picture',
-        dataIndex: 'profile_picture',
-        render: () => <img src={Logo2} alt="" width="50"/>,
-        sorter: true,
-        width: '20%',
-        },
-    {
-    title: 'Email',
-    dataIndex: 'email',
-    },
-  ];
-
-
       const [open, setOpen] = useState(false);
       const [confirmLoading, setConfirmLoading] = useState(false);
       const [name, setName] = useState("");
-      const [gender, setGender] = useState("");
       const [email, setEmail] = useState("");
       
       const showModal = () => {
@@ -97,27 +285,35 @@ const handleTableChange = (pagination, filters, sorter) => {
       const handleOk = () => {
         const newData = {
           name: name,
-          gender: gender,
-          email: email,
+          email: email
         };
         const sendInfo = async () => {
           const axios = require('axios')
           await axios.post(
           'https://wl-users-service.herokuapp.com/api/v1/users', 
-          {name:name , gender:gender , email: email}
+          {name:name , email: email}
           )
-          .then(function (response) {localStorage['token']=response.data.data.token; console.log(response.data.data.token)})
+          .then((res) => res.json())
+          .then(
+            function (results) 
+              { if (results.success) 
+                {
+                  setData([...data, newData]);
+                  setName("");
+                  setEmail("");
+                  setConfirmLoading(true);
+                  setTimeout(() => {
+                  setOpen(false);
+                  setConfirmLoading(false);
+                  }, 2000);  
+                }
+                else {
+                  console.log(results.success) 
+                }
+              }
+            )
           .catch(function (error) {console.log(error)})
-          setData([...data, newData]);
-          setName("");
-          setGender("");
-          setEmail("");
-          setConfirmLoading(true);
-          setTimeout(() => {
-            setOpen(false);
-            setConfirmLoading(false);
-          }, 2000);
-        }
+        };
       };
     
       const handleCancel = () => {
@@ -160,27 +356,18 @@ const handleTableChange = (pagination, filters, sorter) => {
       <Input
       value={name}
       onChange={(e) => setName(e.target.value)}
-      id="examplName"
-      name="name"
       placeholder="name"
-      type="text"
-      size='md'
-      required
       className='mb-4'
       />
-    
       <Input
       value={email}
       onChange={(e) => setEmail(e.target.value)}
-      id="exampleEmail"
-      name="email"
       placeholder="email"
-      type="email"
-      size='md'
-      required
       />
       </Modal>
       <Table
+        components={components}
+        rowClassName={() => 'editable-row'}
         bordered
         dataSource={data}
         columns={columns}
